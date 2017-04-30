@@ -65,6 +65,9 @@ class CServer_send extends Thread
 }
 class CServer_Recv extends Thread
 {
+   static CalcTest calc=new CalcTest();//建立計算物件
+   String RecvString;//收到的字串
+   
    public void run()
    {
       byte buff[] = new byte[1024];
@@ -81,17 +84,25 @@ class CServer_Recv extends Thread
          while(true)
          {
             n=in.read(buff);
-            test_server.txa1.append("Client: "+new String(buff,0,n));
-            System.out.print("Received from client: ");
-            System.out.print(new String(buff,0,n));
+            RecvString=new String(buff,0,n);
+            test_server.txa1.append("Client: "+RecvString);
+            System.out.print("Received from client: "+RecvString);
+            
+            if(RecvString!=null){
+                calc.setRec(RecvString);//送出字串
+                RecvString = null; //字串清空
+            }
+//            n=0;
+            
             sleep((int)(100*Math.random())); 
          }
+         
          //in.close();
          //s.close();
       }
       catch(Exception e)
       {
-         System.out.println("Error:"+e);
+         System.out.println("收值出錯:"+e);
       }
    }
 }
@@ -108,8 +119,10 @@ public class test_server
    static TextField txf1=new TextField("127.0.0.1");
    static CServer_send ss=new CServer_send();
    static CServer_Recv sr=new CServer_Recv();
+   
   
-   public static void main (String[] args)
+//   public static void main (String[] args)
+   public test_server() //改成建構子，由外部呼叫
    {
      try
       {
