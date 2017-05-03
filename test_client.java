@@ -9,7 +9,7 @@ import java.awt.event.*;
 class CClient_send extends Thread
 {
    static int flag_send=0;
- 
+   static String str;
    public void run()
    {
       try
@@ -22,15 +22,17 @@ class CClient_send extends Thread
         
          System.out.println("Data transfering...");
          OutputStream out=s.getOutputStream();
-         String str;
+        
          while(true)
          {
             if(flag_send==1)
             {
                str=Controlpi.txa2.getText();
+               str=str.replace("\\s+", "");
                out.write(str.getBytes());
                flag_send=0;
                System.out.print("Send:"+str);
+               str=null;
             }
             sleep((int)(100*Math.random())); 
          }
@@ -82,10 +84,9 @@ class CClient_Recv   extends Thread
             
             n=in.read(buff);
             Controlpi.txa1.append("Server: "+new String(buff,0,n));
-            System.out.print("Received from server: ");
-            System.out.print(new String(buff,0,n));
+            System.out.println("Received from server: ");
+            System.out.println(new String(buff,0,n));
             open= new String(buff,0,n);
-            System.out.print(open);
             ccr.setValue(open);
             sleep((int)(100*Math.random())); 
          }

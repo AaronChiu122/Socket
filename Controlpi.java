@@ -6,9 +6,13 @@
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
+import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
+import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import java.awt.Button;
 import java.awt.Color;
 import java.awt.Font;
@@ -37,8 +41,10 @@ public class Controlpi {
    static CClient_Recv cr=new CClient_Recv();
    static CClient_send cs=new CClient_send();
    static CallCr ccr=new CallCr();
+   
    String open ;
-   final GpioController gpio = GpioFactory.getInstance();
+    static  final GpioController gpio = GpioFactory.getInstance();
+    static  final GpioPinDigitalOutput pin2=gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02,"02", PinState.LOW);
    public static void main (String[] args) throws InterruptedException
    {
      try
@@ -65,22 +71,33 @@ public class Controlpi {
          frm.add(txa1);frm.add(txa2);
          frm.add(txf1);
          frm.setVisible(true);
+           Listener();
         
       }
       catch(Exception e)
       {
          System.out.println("Error:"+e);
       }
-
+      
 
    }
   
-        public static void NO(){
-            final GpioController gpio = GpioFactory.getInstance();
+        public static void NO() {
+           
             System.out.println("<--Pi4J--> GPIO 02 Control ... started.");
-            final GpioPinDigitalOutput pin2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02,"02", PinState.HIGH);
             pin2.setShutdownOptions(true, PinState.LOW);
+            pin2.high();
             System.out.println("--> GPIO 02 state should be: ON");
+            
+          
+   }
+         public static void OFF() {
+           
+        
+            pin2.low();
+            System.out.println("--> GPIO 02 state should be: OFF");
+            
+          
    }
 
     static class ActLis implements ActionListener
@@ -110,6 +127,95 @@ public class Controlpi {
          System.exit(0);
       }
    }
+       public static void Listener()throws InterruptedException{
+                continueTime[] conTime= new continueTime[3];
+                CallCr callcr = new CallCr(); 
+       
+          for(int i=0;i<3;i++){
+            conTime[i] = new continueTime();
+          }
+             System.out.println("<--Pi4J--> GPIO  Listen  ... started.");
+
+       
+    //    final GpioController gpio = GpioFactory.getInstance();
+
+    
+        final GpioPinDigitalInput myButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, PinPullResistance.PULL_DOWN);
+        final GpioPinDigitalInput myButton2 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, PinPullResistance.PULL_DOWN);
+        final GpioPinDigitalInput myButton3= gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, PinPullResistance.PULL_DOWN);
+        myButton.setShutdownOptions(true);
+        myButton2.setShutdownOptions(true);
+        myButton3.setShutdownOptions(true);
+       
+        myButton.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                long currentTime = System.currentTimeMillis();
+                
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+                if(event.getState().equals(event.getState().HIGH)){
+                   conTime[0]. setStartTime(currentTime);
+                   
+                }
+                if(event.getState().equals(event.getState().LOW)){
+                   conTime[0]. setEndTime(currentTime);
+                   conTime[0].count(); 
+                   System.out.println("Wtime:"+conTime[0].totalTime); 
+                   callcr.setWtime(conTime[0].totalTime);
+                }
+                
+            }
+
+        });
+        myButton2.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                long currentTime = System.currentTimeMillis();
+                
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+                if(event.getState().equals(event.getState().HIGH)){
+                   conTime[1]. setStartTime(currentTime);
+                   
+                }
+                if(event.getState().equals(event.getState().LOW)){
+                   conTime[1]. setEndTime(currentTime);
+                   conTime[1].count(); 
+                   System.out.println("Etime:"+conTime[1].totalTime); 
+                   callcr.setEtime(conTime[1].totalTime);
+                }
+                
+            }
+
+        });
+        myButton3.addListener(new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                long currentTime = System.currentTimeMillis();
+                
+                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
+                if(event.getState().equals(event.getState().HIGH)){
+                   conTime[2]. setStartTime(currentTime);
+                   
+                }
+                if(event.getState().equals(event.getState().LOW)){
+                   conTime[2]. setEndTime(currentTime);
+                   conTime[2].count(); 
+                   System.out.println("Rtime:"+conTime[2].totalTime); 
+                   callcr.setRtime(conTime[2].totalTime);
+                }
+                
+            }
+
+        });
+
+        System.out.println(" ... complete the GPIO #29 circuit and see the listener feedback here in the console.");
+
+        // keep program running until user aborts (CTRL-C)
+        while(true) {
+            Thread.sleep(500);
+        }
+        // gpio.shutdown();   <--- implement this method call if you wish to terminate the Pi4J GPIO controller
+    }
     
 
 }
