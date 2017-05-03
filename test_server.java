@@ -1,36 +1,66 @@
-package sockettest;
+
 
 import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 
-class CServer_send extends Thread
-{
-   static int flag_send=0;
+class Connect{
+    int i;
+    public Connect(){
+        
+        try{
+            ServerSocket svsSend = new ServerSocket(2525);
+            ServerSocket svsRecv = new ServerSocket(2526);
+            for (;;) {  
+                Socket incomingSend = svsSend.accept( );
+                Socket incomingRecv = svsRecv.accept( );
+                System.out.println("ID : " + i+ ", Connection Started");
+                    
+                new CServer_send(incomingSend).start();
+                new CServer_Recv(incomingRecv).start();
+                i++;
+            }
+            
+        }catch(Exception e)
+        {
+           System.out.println("Error IN Connect:"+e);
+        }
+        
+    }
+}
+
+class CServer_send extends Thread{
+    public static String str="ON";
+    private Socket s;
+    public CServer_send(Socket s){
+        this.s = s;
+    }
+//   static int flag_send=0;
    public void run()
    {
       try
       {
-         test_server.txa2.addKeyListener(new KeyLis());
+//         test_server.txa2.addKeyListener(new KeyLis());
         
-         ServerSocket svs = new ServerSocket(2525);
+//         ServerSocket svs = new ServerSocket(2525);
 
-         Socket s=svs.accept();
-         test_server.txa1.append("Clinet connecting for sending successfully!!\n");
+//         Socket s=svs.accept();
+//         test_server.txa1.append("Clinet connecting for sending successfully!!\n");
          System.out.println("Clinet connecting for sending successfully!!");
         
          System.out.println("Data transfering...");
          OutputStream out=s.getOutputStream();
-         String str;
+         
          while(true)
          {
-            if(flag_send==1)
+            if(str!=null)
             {
-               str=test_server.txa2.getText();
+//               str=test_server.txa2.getText();
                out.write(str.getBytes());
-               flag_send=0;
+//               flag_send=0;
                System.out.print("Send:"+str);
+               str=null;
             }
             sleep((int)(100*Math.random())); 
          }
@@ -43,39 +73,44 @@ class CServer_send extends Thread
          System.out.println("Error:"+e);
       }
    }
-   static class KeyLis extends KeyAdapter
-   {
-      public void keyPressed(KeyEvent e)
-      {
-         if(e.getKeyCode()==KeyEvent.VK_ENTER)
-         { 
-            flag_send=1;
-         }
-      }
-      public void keyReleased(KeyEvent e)
-      {  
-         if(e.getKeyCode()==KeyEvent.VK_ENTER)
-         { 
-            test_server.txa1.append("Server: "+test_server.txa2.getText());
-            test_server.txa2.setText("\r");
-         } 
-          
-      }  
-   }
+//   static class KeyLis extends KeyAdapter
+//   {
+//      public void keyPressed(KeyEvent e)
+//      {
+//         if(e.getKeyCode()==KeyEvent.VK_ENTER)
+//         { 
+//            flag_send=1;
+//         }
+//      }
+//      public void keyReleased(KeyEvent e)
+//      {  
+//         if(e.getKeyCode()==KeyEvent.VK_ENTER)
+//         { 
+//            test_server.txa1.append("Server: "+test_server.txa2.getText());
+//            test_server.txa2.setText("\r");
+//         } 
+//          
+//      }  
+//   }
 }
-class CServer_Recv extends Thread
-{
-   static CalcTest calc=new CalcTest();//建立計算物件
-   String RecvString;//收到的字串
-   
-   public void run()
-   {
+class CServer_Recv extends Thread{
+    
+    private Socket s;
+    public CServer_Recv(Socket s){
+        this.s = s;
+    }
+    
+    static CalcTest calc=new CalcTest();
+    String RecvString;
+
+    public void run()
+    {
       byte buff[] = new byte[1024];
       try
       {
-         ServerSocket svs = new ServerSocket(2526);
+//         ServerSocket svs = new ServerSocket(2526);
         
-         Socket s=svs.accept();
+//         Socket s=svs.accept();
          test_server.txa1.append("Clinet connecting for receiving successfully!!\n");
          System.out.println("Clinet connecting for receiving successfully!!");
         
@@ -85,15 +120,24 @@ class CServer_Recv extends Thread
          {
             n=in.read(buff);
             RecvString=new String(buff,0,n);
+			RecvString = RecvString.replaceAll("\\s+", "");//!!!!!
             test_server.txa1.append("Client: "+RecvString);
-            System.out.print("Received from client: "+RecvString);
+            System.out.print("Received from client: "+RecvString+"\n");
             
             if(RecvString!=null){
-                calc.setRec(RecvString);//送出字串
-                RecvString = null; //字串清空
+                String feedback="";
+                calc.setRec(RecvString);
+                feedback=calc.getRec();
+                
+                if(feedback.equals("OFF")){
+                    CServer_send.str="OFF";
+                }else if(feedback.equals("CAL")){
+                    CServer_send.str="CAL";
+                }
+                feedback = "";
+                RecvString = null; 
             }
-//            n=0;
-            
+
             sleep((int)(100*Math.random())); 
          }
          
@@ -102,7 +146,7 @@ class CServer_Recv extends Thread
       }
       catch(Exception e)
       {
-         System.out.println("收值出錯:"+e);
+         System.out.println("RecvErr:"+e);
       }
    }
 }
@@ -117,12 +161,12 @@ public class test_server
    static TextArea txa1=new TextArea("",6,10,TextArea.SCROLLBARS_VERTICAL_ONLY);
    static TextArea txa2=new TextArea("",6,10,TextArea.SCROLLBARS_NONE);
    static TextField txf1=new TextField("127.0.0.1");
-   static CServer_send ss=new CServer_send();
-   static CServer_Recv sr=new CServer_Recv();
+//   static CServer_send ss=new CServer_send();
+//   static CServer_Recv sr=new CServer_Recv();
    
   
 //   public static void main (String[] args)
-   public test_server() //改成建構子，由外部呼叫
+   public test_server() 
    {
      try
       {
@@ -168,8 +212,7 @@ public class test_server
             txa1.setText("Waiting for connecting("+txf1.getText()+")...\n");
             System.out.println("Waiting for connecting...");
             txf1.setEditable(false);
-            ss.start();
-            sr.start();
+            new Connect();
          }
          else if(btn==btn2)
             System.exit(0);

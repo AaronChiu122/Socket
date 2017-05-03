@@ -1,14 +1,14 @@
 
-package sockettest;
-
-import sockettest.*;
 
 public class CalcTest {
     private String rec;
     private String Total;
-    
+    private String feedback;
+    String one2Three;
     public String getRec() {
-        return rec;
+        String s = feedback;
+        feedback="";
+        return s;
     }
 
     public void setRec(String rec) {
@@ -16,11 +16,14 @@ public class CalcTest {
             Direct();
     }
     private void Direct(){
-        String oneToThree=rec.substring(0, 3);
-        System.out.println("前三個字為:" + oneToThree);
-        if(oneToThree.equals("cal")){
+        if(rec.length()>=3){
+           one2Three=rec.substring(0, 3); 
+           System.out.println("one2Three:" + one2Three);
+            if(one2Three.equals("cal")){
                 Calculat();
+            }
         }
+        
     }
     private void Calculat(){
         
@@ -29,14 +32,17 @@ public class CalcTest {
 //        for (String token:tokens) {
 //            System.out.println(token);
 //        }
-            Total=String.valueOf(Integer.valueOf(tokens[1])*10+ //水槍
-                Integer.valueOf(tokens[2])*15+ //泡沫
-                Integer.valueOf(tokens[3])*20); //烘乾
+            Total=String.valueOf(Integer.valueOf(tokens[1])*10+ //water
+                Integer.valueOf(tokens[2])*15+  				//foam
+                Integer.valueOf(tokens[3])*20); 				//drying
             System.out.println("Total:"+Total);
             Total=null;
             rec=null;
+            feedback="OFF";
         }catch(Exception e){
-         System.out.println("計算出錯"+e);
+            feedback="CAL";
+            System.out.println("client�ݿ�J���ƾڤ���");   
+            System.out.println("CalErr"+e);
         }
         
     }
