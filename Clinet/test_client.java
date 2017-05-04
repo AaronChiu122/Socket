@@ -4,19 +4,50 @@ import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
+class Connent extends Thread{
+   
+    Connent(){
+    }
+    public void run(){
+        try {
+            Socket s= new Socket("120.107.144.235",2526);
+            Socket sv= new Socket("120.107.144.235",2525);
+                new CClient_send(s).start();
+             new CClient_Recv(sv).start();
+             for(;;){
+         
+             if(s.getKeepAlive()){
+             new CClient_send(s).start();
+             new CClient_Recv(sv).start();
+             }
+            sleep((int)(100*Math.random()));
+             }
+           
+        } catch (InterruptedException ex) {
+            System.out.println("Error  Connent:"+ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Connent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
 
 class CClient_send extends Thread
 {
    static int flag_send=0;
    static String str;
+   Socket s;
+   public CClient_send(Socket socket){
+       this.s= socket;
+   }
    public void run()
    {
       try
       {
          Controlpi.txa2.addKeyListener(new KeyLis());
                  
-         Socket s=new Socket("120.107.144.235",2526);
+       
          Controlpi.txa1.append("Connected with server for sending successfully!!\n");
          System.out.println("Connected with server for sending successfully!!");
         
@@ -68,12 +99,16 @@ class CClient_send extends Thread
 class CClient_Recv   extends Thread 
 { String open;
   CallCr ccr=new CallCr();
+  Socket s;
+     public CClient_Recv(Socket socket){
+       this.s= socket;
+   }
    public void run()
    {
       byte buff[] = new byte[1024];
       try
       {
-         Socket s=new Socket("120.107.144.235",2525);
+        
          Controlpi.txa1.append("Connected with server for receiving successfully!!\n");
  
 

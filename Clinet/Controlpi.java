@@ -38,15 +38,19 @@ public class Controlpi {
    static TextArea txa1=new TextArea("",6,10,TextArea.SCROLLBARS_VERTICAL_ONLY);
    static TextArea txa2=new TextArea("",6,10,TextArea.SCROLLBARS_NONE);
    static TextField txf1=new TextField("127.0.0.1");
-   static CClient_Recv cr=new CClient_Recv();
-   static CClient_send cs=new CClient_send();
+  // static CClient_Recv cr=new CClient_Recv();
+  // static CClient_send cs=new CClient_send();
+   static Connent cn= new Connent();
    static CallCr ccr=new CallCr();
-   static long wtime,rtime,etime;
+   static long watertime,drytime,foamtime;
    
    
    String open ;
     static  final GpioController gpio = GpioFactory.getInstance();
     static  final GpioPinDigitalOutput pin2=gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02,"02", PinState.LOW);
+    static  final GpioPinDigitalOutput pin4=gpio.provisionDigitalOutputPin(RaspiPin.GPIO_04,"04", PinState.LOW);
+    static  final GpioPinDigitalOutput pin5=gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05,"05", PinState.LOW);
+    static  final GpioPinDigitalOutput pin6=gpio.provisionDigitalOutputPin(RaspiPin.GPIO_06,"06", PinState.LOW);
    public static void main (String[] args) throws InterruptedException
    {
      try
@@ -74,7 +78,7 @@ public class Controlpi {
          frm.add(txf1);
          frm.setVisible(true);
            Listener();
-        
+         
       }
       catch(Exception e)
       {
@@ -90,6 +94,35 @@ public class Controlpi {
             pin2.setShutdownOptions(true, PinState.LOW);
             pin2.high();
             System.out.println("--> GPIO 02 state should be: ON");
+            NOWater();
+            NODry();
+            NOFoam();
+   }
+        
+         public static void NOWater() {
+           
+            System.out.println("<--Pi4J--> GPIO 04 Control ... started.");
+            pin4.setShutdownOptions(true, PinState.LOW);
+            pin4.high();
+            System.out.println("--> GPIO 04 state should be: ON");
+            
+          
+   }
+        public static void NODry() {
+           
+            System.out.println("<--Pi4J--> GPIO 05 Control ... started.");
+            pin5.setShutdownOptions(true, PinState.LOW);
+            pin5.high();
+            System.out.println("--> GPIO 05 state should be: ON");
+            
+          
+   }      
+        public static void NOFoam() {
+           
+            System.out.println("<--Pi4J--> GPIO 06 Control ... started.");
+            pin6.setShutdownOptions(true, PinState.LOW);
+            pin6.high();
+            System.out.println("--> GPIO 06 state should be: ON");
             
           
    }
@@ -98,6 +131,32 @@ public class Controlpi {
         
             pin2.low();
             System.out.println("--> GPIO 02 state should be: OFF");
+            OFFWater();
+            OFFDry();
+            OFFFoam();
+          
+   }
+        public static void OFFWater() {
+           
+        
+            pin4.low();
+            System.out.println("--> GPIO 04 state should be: OFF");
+            
+          
+   }
+        public static void OFFDry() {
+           
+        
+            pin5.low();
+            System.out.println("--> GPIO 05 state should be: OFF");
+            
+          
+   }
+        public static void OFFFoam() {
+           
+        
+            pin6.low();
+            System.out.println("--> GPIO 06 state should be: OFF");
             
           
    }
@@ -112,8 +171,9 @@ public class Controlpi {
             Controlpi.txa1.setText("Waiting for connecting with server("+txf1.getText()+")...\n");
             System.out.println("Waiting for connecting with server...");
             txf1.setEditable(false);
-            cs.start();
-            cr.start();
+         //    cs.start();
+         //   cr.start();
+         cn.start();
          }
          else if(btn==btn2)
             System.exit(0);
@@ -162,8 +222,9 @@ public class Controlpi {
                 if(event.getState().equals(event.getState().LOW)){
                    conTime[0]. setEndTime(currentTime);
                    conTime[0].count(); 
-                   System.out.println("Wtime:"+conTime[0].totalTime); 
-                   wtime= conTime[0].totalTime;
+                   System.out.println("WaterTime:"+conTime[0].totalTime); 
+                   watertime= conTime[0].totalTime;
+                  
                 }
                 
             }
@@ -182,8 +243,8 @@ public class Controlpi {
                 if(event.getState().equals(event.getState().LOW)){
                    conTime[1]. setEndTime(currentTime);
                    conTime[1].count(); 
-                   System.out.println("Etime:"+conTime[1].totalTime); 
-                  etime= conTime[1].totalTime;
+                   System.out.println("DryTime:"+conTime[1].totalTime); 
+                  drytime= conTime[1].totalTime;
                 }
                 
             }
@@ -202,9 +263,9 @@ public class Controlpi {
                 if(event.getState().equals(event.getState().LOW)){
                    conTime[2]. setEndTime(currentTime);
                    conTime[2].count(); 
-                   System.out.println("Rtime:"+conTime[2].totalTime); 
+                   System.out.println("FoamTime:"+conTime[2].totalTime); 
                  //  callcr.setRtime(conTime[2].totalTime);
-                   rtime= conTime[2].totalTime;
+                   foamtime= conTime[2].totalTime;
                 }
                 
             }
