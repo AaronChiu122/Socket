@@ -4,10 +4,10 @@ import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Connect extends Thread{
-    int i;
-    int x;
+    static AtomicInteger onlineCount = new AtomicInteger(1);
     public Connect(){}
         public void run()
         {
@@ -17,11 +17,12 @@ class Connect extends Thread{
                 for (;;) {  
                     Socket incomingSend = svsSend.accept( );
                     Socket incomingRecv = svsRecv.accept( );
-                    System.out.println("ID : " + i+ ", Connection Started");
+                    System.out.println("ID : " + onlineCount+ ", Connection Started");
+                    System.out.println("目前線上人數：" + onlineCount);
 
-                    new CServer_send(incomingSend).start();
-                    new CServer_Recv(incomingRecv).start();
-                    i++;
+                    new CServer_send(incomingSend,onlineCount.intValue()).start();
+                    new CServer_Recv(incomingRecv,onlineCount.intValue()).start();
+                    onlineCount.getAndIncrement();
                     sleep((int)(100*Math.random()));
                 }
 
@@ -30,14 +31,18 @@ class Connect extends Thread{
                System.out.println("Error IN Connect:"+e);
             }
         }    
-    
 }
 
+
 class CServer_send extends Thread{
-    public static String str="ON";
+    public static String str="";
     private Socket s;
-    public CServer_send(Socket s){
+    private final int onlineCount;
+    public static int checkonlineCount;
+    
+    public CServer_send(Socket s,int onlineCount){
         this.s = s;
+        this.onlineCount=onlineCount;
     }
    static int flag_send=0;
    public void run(){
@@ -51,20 +56,20 @@ class CServer_send extends Thread{
          OutputStream out=s.getOutputStream();
          
          while(true){
-            if(str!=null){
+            if(str!="" && onlineCount==onlineCount){
                out.write(str.getBytes());
-               test_server.txa1.append("Server: "+str+"\n");
-               System.out.print("Send:"+str);
+               test_server.txa1.append("Server to "+onlineCount+":"+str+"\n");
+               System.out.print("Send "+onlineCount+":"+str+"\n");
                
             }else if(flag_send==1){
                 str=test_server.txa2.getText();
                 out.write(str.getBytes());
                 flag_send=0;
-                test_server.txa1.append("Server: "+str+"\n");
-                System.out.print("Send:"+str);
+                test_server.txa1.append("Server to "+onlineCount+":"+str+"\n");
+                System.out.print("Send "+onlineCount+":"+str+"\n");
             }
             
-            str=null;
+            str="";
             sleep((int)(100*Math.random())); 
          }
          //in.close();
@@ -99,13 +104,16 @@ class CServer_send extends Thread{
 class CServer_Recv extends Thread{
     
     private Socket s;
-    public CServer_Recv(Socket s){
-        this.s = s;
-    }
-    
-    static CalcTest calc=new CalcTest();
+    private int onlineCount;
     String RecvString="";
     String feedback="";
+    CalcTest calc;
+    
+    public CServer_Recv(Socket s,int onlineCount){
+        this.s = s;
+        this.onlineCount=onlineCount;
+        calc=new CalcTest();
+    }
     
     public void run()
     {
@@ -122,9 +130,9 @@ class CServer_Recv extends Thread{
          {
             n=in.read(buff);
             RecvString=new String(buff,0,n);
-			RecvString = RecvString.replaceAll("\\s+", "");//!!!!!
-            test_server.txa1.append("Client: "+RecvString+"\n");
-            System.out.print("Received from client: "+RecvString+"\n");
+            RecvString = RecvString.replaceAll("\\s+", "");//!!!!!
+            test_server.txa1.append("Client "+onlineCount+":"+RecvString+"\n");
+            System.out.print("Received from client "+onlineCount+":"+RecvString+"\n");
             
             if(RecvString!=null){
                 
@@ -133,8 +141,10 @@ class CServer_Recv extends Thread{
                 
                 if(feedback.equals("OFF")){
                     CServer_send.str="OFF";
+                    CServer_send.checkonlineCount=onlineCount;
                 }else if(feedback.equals("CAL")){
                     CServer_send.str="CAL";
+                    CServer_send.checkonlineCount=onlineCount;
                 }
                 feedback = "";
                 RecvString = null; 
