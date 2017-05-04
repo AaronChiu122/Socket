@@ -1,9 +1,9 @@
 
 
 public class CalcTest {
-    private String rec;
-    private String Total;
-    private String feedback;
+    private String rec="";
+    private String Total="";
+    private String feedback="";
     String one2Three;
     public String getRec() {
         String s = feedback;
@@ -18,8 +18,8 @@ public class CalcTest {
     private void Direct(){
         if(rec.length()>=3){
            one2Three=rec.substring(0, 3); 
-           System.out.println("one2Three:" + one2Three);
             if(one2Three.equals("cal")){
+                System.out.println("one2Three:" + one2Three);
                 Calculat();
             }
         }

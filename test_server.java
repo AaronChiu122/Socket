@@ -5,29 +5,31 @@ import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 
-class Connect{
+class Connect extends Thread{
     int i;
-    public Connect(){
-        
-        try{
-            ServerSocket svsSend = new ServerSocket(2525);
-            ServerSocket svsRecv = new ServerSocket(2526);
-            for (;;) {  
-                Socket incomingSend = svsSend.accept( );
-                Socket incomingRecv = svsRecv.accept( );
-                System.out.println("ID : " + i+ ", Connection Started");
-                    
-                new CServer_send(incomingSend).start();
-                new CServer_Recv(incomingRecv).start();
-                i++;
-            }
-            
-        }catch(Exception e)
+    public Connect(){}
+        public void run()
         {
-           System.out.println("Error IN Connect:"+e);
-        }
-        
-    }
+            try{
+                ServerSocket svsSend = new ServerSocket(2525);
+                ServerSocket svsRecv = new ServerSocket(2526);
+                for (;;) {  
+                    Socket incomingSend = svsSend.accept( );
+                    Socket incomingRecv = svsRecv.accept( );
+                    System.out.println("ID : " + i+ ", Connection Started");
+
+                    new CServer_send(incomingSend).start();
+                    new CServer_Recv(incomingRecv).start();
+                    i++;
+                    sleep((int)(100*Math.random()));
+                }
+
+            }catch(Exception e)
+            {
+               System.out.println("Error IN Connect:"+e);
+            }
+        }    
+    
 }
 
 class CServer_send extends Thread{
@@ -36,32 +38,32 @@ class CServer_send extends Thread{
     public CServer_send(Socket s){
         this.s = s;
     }
-//   static int flag_send=0;
-   public void run()
-   {
-      try
-      {
-//         test_server.txa2.addKeyListener(new KeyLis());
+   static int flag_send=0;
+   public void run(){
+      try{
+         test_server.txa2.addKeyListener(new KeyLis());
         
-//         ServerSocket svs = new ServerSocket(2525);
-
-//         Socket s=svs.accept();
-//         test_server.txa1.append("Clinet connecting for sending successfully!!\n");
+         test_server.txa1.append("Clinet connecting for sending successfully!!\n");
          System.out.println("Clinet connecting for sending successfully!!");
         
          System.out.println("Data transfering...");
          OutputStream out=s.getOutputStream();
          
-         while(true)
-         {
-            if(str!=null)
-            {
-//               str=test_server.txa2.getText();
+         while(true){
+            if(str!=null){
                out.write(str.getBytes());
-//               flag_send=0;
+               test_server.txa1.append("Server: "+str+"\n");
                System.out.print("Send:"+str);
-               str=null;
+               
+            }else if(flag_send==1){
+                str=test_server.txa2.getText();
+                out.write(str.getBytes());
+                flag_send=0;
+                test_server.txa1.append("Server: "+str+"\n");
+                System.out.print("Send:"+str);
             }
+            
+            str=null;
             sleep((int)(100*Math.random())); 
          }
          //in.close();
@@ -73,25 +75,25 @@ class CServer_send extends Thread{
          System.out.println("Error:"+e);
       }
    }
-//   static class KeyLis extends KeyAdapter
-//   {
-//      public void keyPressed(KeyEvent e)
-//      {
-//         if(e.getKeyCode()==KeyEvent.VK_ENTER)
-//         { 
-//            flag_send=1;
-//         }
-//      }
-//      public void keyReleased(KeyEvent e)
-//      {  
-//         if(e.getKeyCode()==KeyEvent.VK_ENTER)
-//         { 
-//            test_server.txa1.append("Server: "+test_server.txa2.getText());
-//            test_server.txa2.setText("\r");
-//         } 
-//          
-//      }  
-//   }
+   static class KeyLis extends KeyAdapter
+   {
+      public void keyPressed(KeyEvent e)
+      {
+         if(e.getKeyCode()==KeyEvent.VK_ENTER)
+         { 
+            flag_send=1;
+         }
+      }
+      public void keyReleased(KeyEvent e)
+      {  
+         if(e.getKeyCode()==KeyEvent.VK_ENTER)
+         { 
+            test_server.txa1.append("Server: "+test_server.txa2.getText());
+            test_server.txa2.setText("\r");
+         } 
+          
+      }  
+   }
 }
 class CServer_Recv extends Thread{
     
@@ -101,16 +103,15 @@ class CServer_Recv extends Thread{
     }
     
     static CalcTest calc=new CalcTest();
-    String RecvString;
-
+    String RecvString="";
+    String feedback="";
+    
     public void run()
     {
       byte buff[] = new byte[1024];
       try
       {
-//         ServerSocket svs = new ServerSocket(2526);
-        
-//         Socket s=svs.accept();
+
          test_server.txa1.append("Clinet connecting for receiving successfully!!\n");
          System.out.println("Clinet connecting for receiving successfully!!");
         
@@ -121,11 +122,11 @@ class CServer_Recv extends Thread{
             n=in.read(buff);
             RecvString=new String(buff,0,n);
 			RecvString = RecvString.replaceAll("\\s+", "");//!!!!!
-            test_server.txa1.append("Client: "+RecvString);
+            test_server.txa1.append("Client: "+RecvString+"\n");
             System.out.print("Received from client: "+RecvString+"\n");
             
             if(RecvString!=null){
-                String feedback="";
+                
                 calc.setRec(RecvString);
                 feedback=calc.getRec();
                 
@@ -146,7 +147,7 @@ class CServer_Recv extends Thread{
       }
       catch(Exception e)
       {
-         System.out.println("RecvErr:"+e);
+        System.out.println("RecvErr:"+e);
       }
    }
 }
@@ -163,15 +164,13 @@ public class test_server
    static TextField txf1=new TextField("127.0.0.1");
 //   static CServer_send ss=new CServer_send();
 //   static CServer_Recv sr=new CServer_Recv();
-   
-  
-//   public static void main (String[] args)
+
    public test_server() 
    {
      try
       {
-         InetAddress adr=InetAddress.getLocalHost();
-         txf1.setText(adr.getHostAddress());
+//         InetAddress adr=InetAddress.getLocalHost();
+         txf1.setText(getIp());
          btn1.addActionListener(new ActLis());
          btn2.addActionListener(new ActLis());
          frm.addWindowListener(new WinLis());
@@ -201,6 +200,24 @@ public class test_server
          System.out.println("Error:"+e);
       }
    }
+   public static String getIp() throws Exception {
+        URL whatismyip = new URL("http://checkip.amazonaws.com");
+        BufferedReader in = null;
+        try {
+            in = new BufferedReader(new InputStreamReader(
+                    whatismyip.openStream()));
+            String ip = in.readLine();
+            return ip;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
   
    static class ActLis implements ActionListener
    {
@@ -212,7 +229,7 @@ public class test_server
             txa1.setText("Waiting for connecting("+txf1.getText()+")...\n");
             System.out.println("Waiting for connecting...");
             txf1.setEditable(false);
-            new Connect();
+            new Connect().start();
          }
          else if(btn==btn2)
             System.exit(0);
