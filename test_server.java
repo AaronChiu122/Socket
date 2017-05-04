@@ -7,6 +7,7 @@ import java.awt.event.*;
 
 class Connect extends Thread{
     int i;
+    int x;
     public Connect(){}
         public void run()
         {
