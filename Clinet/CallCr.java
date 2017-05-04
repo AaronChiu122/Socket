@@ -1,6 +1,6 @@
 
 public class CallCr {
-    String value,Cal;
+    String value,Cal,test;
   //  static long wtime=Controlpi.wtime ,etime=Controlpi.etime ,rtime=Controlpi.rtime;
     
  
