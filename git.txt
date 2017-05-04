@@ -1,0 +1,38 @@
+
+
+將檔案複製下來(第一次要做的)
+
+git clone https://github.com/AaronChiu122/Socket.git
+
+將檔案同步下來
+
+git pull origin master
+
+將要上傳的檔案加入GIT
+
+git add .
+
+要提交的訊息
+
+git commit -m "test3"
+
+提交
+
+git push origin master
+
+查看分支
+
+git branch
+
+增加分支
+
+git branch Clinet
+
+移動到分支
+
+git checkout Clinet
+
+上傳到分支
+
+git push origin Clinet
+
