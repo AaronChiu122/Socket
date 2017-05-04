@@ -41,6 +41,8 @@ public class Controlpi {
    static CClient_Recv cr=new CClient_Recv();
    static CClient_send cs=new CClient_send();
    static CallCr ccr=new CallCr();
+   static long wtime,rtime,etime;
+   
    
    String open ;
     static  final GpioController gpio = GpioFactory.getInstance();
@@ -161,7 +163,7 @@ public class Controlpi {
                    conTime[0]. setEndTime(currentTime);
                    conTime[0].count(); 
                    System.out.println("Wtime:"+conTime[0].totalTime); 
-                   callcr.setWtime(conTime[0].totalTime);
+                   wtime= conTime[0].totalTime;
                 }
                 
             }
@@ -181,7 +183,7 @@ public class Controlpi {
                    conTime[1]. setEndTime(currentTime);
                    conTime[1].count(); 
                    System.out.println("Etime:"+conTime[1].totalTime); 
-                   callcr.setEtime(conTime[1].totalTime);
+                  etime= conTime[1].totalTime;
                 }
                 
             }
@@ -201,7 +203,8 @@ public class Controlpi {
                    conTime[2]. setEndTime(currentTime);
                    conTime[2].count(); 
                    System.out.println("Rtime:"+conTime[2].totalTime); 
-                   callcr.setRtime(conTime[2].totalTime);
+                 //  callcr.setRtime(conTime[2].totalTime);
+                   rtime= conTime[2].totalTime;
                 }
                 
             }
