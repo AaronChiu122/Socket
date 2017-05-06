@@ -4,11 +4,15 @@ import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class Connect extends Thread{
-    static AtomicInteger onlineCount = new AtomicInteger(1);
-    public Connect(){}
+    static AtomicInteger onlineCount = new AtomicInteger(0);
+    static Vector output;
+    public Connect(){
+        output = new Vector();
+    }
         public void run()
         {
             try{
@@ -17,10 +21,14 @@ class Connect extends Thread{
                 for (;;) {  
                     Socket incomingSend = svsSend.accept( );
                     Socket incomingRecv = svsRecv.accept( );
+                    
+                    OutputStream out=incomingSend.getOutputStream();
+                    output.add(out);
+                    
                     System.out.println("ID : " + onlineCount+ ", Connection Started");
                     System.out.println("目前線上人數：" + onlineCount);
 
-                    new CServer_send(incomingSend,onlineCount.intValue()).start();
+                    new CServer_send().start();
                     new CServer_Recv(incomingRecv,onlineCount.intValue()).start();
                     onlineCount.getAndIncrement();
                     sleep((int)(100*Math.random()));
@@ -33,17 +41,8 @@ class Connect extends Thread{
         }    
 }
 
-
 class CServer_send extends Thread{
     public static String str="";
-    private Socket s;
-    private final int onlineCount;
-    public static int checkonlineCount;
-    
-    public CServer_send(Socket s,int onlineCount){
-        this.s = s;
-        this.onlineCount=onlineCount;
-    }
    static int flag_send=0;
    public void run(){
       try{
@@ -53,20 +52,26 @@ class CServer_send extends Thread{
          System.out.println("Clinet connecting for sending successfully!!");
         
          System.out.println("Data transfering...");
-         OutputStream out=s.getOutputStream();
+         
          
          while(true){
-            if(str!="" && onlineCount==onlineCount){
-               out.write(str.getBytes());
-               test_server.txa1.append("Server to "+onlineCount+":"+str+"\n");
-               System.out.print("Send "+onlineCount+":"+str+"\n");
-               
-            }else if(flag_send==1){
+            if(flag_send==1){
+                
                 str=test_server.txa2.getText();
-                out.write(str.getBytes());
+                test_server.txa1.append("Server: "+test_server.txa2.getText());
+                String[] tokens = str.split(",");
+                if(tokens.length>=2){
+                    int ID=Integer.valueOf(str.substring(0, 1) );
+                     
+                    OutputStream writer = (OutputStream)Connect.output.elementAt(ID);
+                    writer.write(tokens[1].getBytes());
+                    writer.flush();
+
+                    test_server.txa1.append("Server to "+ID+":"+tokens[1]+"\n");
+                    System.out.print("Send "+ID+":"+tokens[1]+"\n");
+                    tokens=null;
+                }
                 flag_send=0;
-                test_server.txa1.append("Server to "+onlineCount+":"+str+"\n");
-                System.out.print("Send "+onlineCount+":"+str+"\n");
             }
             
             str="";
@@ -94,13 +99,14 @@ class CServer_send extends Thread{
       {  
          if(e.getKeyCode()==KeyEvent.VK_ENTER)
          { 
-            test_server.txa1.append("Server: "+test_server.txa2.getText());
             test_server.txa2.setText("\r");
          } 
           
       }  
    }
 }
+
+
 class CServer_Recv extends Thread{
     
     private Socket s;
@@ -108,6 +114,7 @@ class CServer_Recv extends Thread{
     String RecvString="";
     String feedback="";
     CalcTest calc;
+    static int flag_send=0;
     
     public CServer_Recv(Socket s,int onlineCount){
         this.s = s;
@@ -120,7 +127,6 @@ class CServer_Recv extends Thread{
       byte buff[] = new byte[1024];
       try
       {
-
          test_server.txa1.append("Clinet connecting for receiving successfully!!\n");
          System.out.println("Clinet connecting for receiving successfully!!");
         
@@ -134,21 +140,19 @@ class CServer_Recv extends Thread{
             test_server.txa1.append("Client "+onlineCount+":"+RecvString+"\n");
             System.out.print("Received from client "+onlineCount+":"+RecvString+"\n");
             
-            if(RecvString!=null){
+            if(RecvString!=""){
                 
                 calc.setRec(RecvString);
                 feedback=calc.getRec();
-                
-                if(feedback.equals("OFF")){
-                    CServer_send.str="OFF";
-                    CServer_send.checkonlineCount=onlineCount;
-                }else if(feedback.equals("CAL")){
-                    CServer_send.str="CAL";
-                    CServer_send.checkonlineCount=onlineCount;
-                }
+                OutputStream writer = (OutputStream)Connect.output.elementAt(onlineCount);
+                writer.write(feedback.getBytes());
+                writer.flush();
+
                 feedback = "";
-                RecvString = null; 
+                RecvString = ""; 
+                
             }
+            
 
             sleep((int)(100*Math.random())); 
          }
