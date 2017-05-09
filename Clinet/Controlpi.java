@@ -91,6 +91,8 @@ public class Controlpi {
         pin2.high();
         System.out.println("--> GPIO 02 state should be: ON");
         NOWater();
+        NOFoam();
+        NODry();
     }
 
     public static void NOWater() {
@@ -252,7 +254,7 @@ public class Controlpi {
                         long sTime = System.currentTimeMillis();
 
                         if (useTime[1] <= (int) ((sTime - conTime[1].startTime) / 1000 + drytime)) {
-                            OFFWater();
+                            OFFFoam();
                             break;
                         }
                         try {
@@ -270,7 +272,7 @@ public class Controlpi {
                     System.out.println("DryTime:" + conTime[1].totalTime);
                     drytime = conTime[1].totalTime;
                     if (useTime[0] == (int) drytime) {
-                        OFFWater();
+                        OFFFoam();
                     }
                 }
 
@@ -291,7 +293,7 @@ public class Controlpi {
                         long sTime = System.currentTimeMillis();
 
                         if (useTime[2] <= (int) ((sTime - conTime[2].startTime) / 1000 + foamtime)) {
-                            OFFWater();
+                            OFFDry();
                             break;
                         }
                         try {
@@ -310,7 +312,7 @@ public class Controlpi {
                     //  callcr.setRtime(conTime[2].totalTime);
                     foamtime = conTime[2].totalTime;
                     if (useTime[0] == (int) foamtime) {
-                        OFFWater();
+                        OFFDry();
                     }
                 }
 
