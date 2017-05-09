@@ -4,7 +4,7 @@ public class CalcTest {
     private String rec="";
     private String Total="";
     private String feedback="";
-    String one2Three;
+    String one2four;
     public String getRec() {
         String s = feedback;
         feedback="";
@@ -16,10 +16,10 @@ public class CalcTest {
             Direct();
     }
     private void Direct(){
-        if(rec.length()>=3){
-           one2Three=rec.substring(0, 3); 
-            if(one2Three.equals("cal")){
-                System.out.println("one2Three:" + one2Three);
+        if(rec.length()>=4){
+           one2four=rec.substring(0, 4); 
+            if(one2four.equals("TIME")){
+                System.out.println("one2four:" + one2four);
                 Calculat();
             }
         }
@@ -38,7 +38,7 @@ public class CalcTest {
             System.out.println("Total:"+Total);
             Total=null;
             rec=null;
-            feedback="OFF";
+            feedback="111142525836965555";
         }catch(Exception e){
             feedback="CAL";
             System.out.println("client端輸入的數據不對");   

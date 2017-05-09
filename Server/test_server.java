@@ -25,11 +25,17 @@ class Connect extends Thread{
                     OutputStream out=incomingSend.getOutputStream();
                     output.add(out);
                     
+                    System.out.println("連線的IP:"+incomingSend.getInetAddress());
                     System.out.println("ID : " + onlineCount+ ", Connection Started");
-                    System.out.println("目前線上人數：" + onlineCount);
-
+                    test_server.txa1.append(onlineCount+"號連線成功\n");
+                    
                     new CServer_send().start();
-                    new CServer_Recv(incomingRecv,onlineCount.intValue()).start();
+                    
+                    Thread t = new Thread(new CServer_Recv(incomingRecv,onlineCount.intValue()));
+                    t.start();
+                    
+                    System.out.println("目前線上人數：" + (t.activeCount()/2-1));
+                    
                     onlineCount.getAndIncrement();
                     sleep((int)(100*Math.random()));
                 }
@@ -48,20 +54,20 @@ class CServer_send extends Thread{
       try{
          test_server.txa2.addKeyListener(new KeyLis());
         
-         test_server.txa1.append("Clinet connecting for sending successfully!!\n");
-         System.out.println("Clinet connecting for sending successfully!!");
+//         test_server.txa1.append("Clinet connecting for sending successfully!!\n");
+//         System.out.println("Clinet connecting for sending successfully!!");
         
-         System.out.println("Data transfering...");
+//         System.out.println("Data transfering...");
          
          
          while(true){
             if(flag_send==1){
                 
                 str=test_server.txa2.getText();
-                test_server.txa1.append("Server: "+test_server.txa2.getText());
+//                test_server.txa1.append("Server: "+test_server.txa2.getText());
                 String[] tokens = str.split(",");
-                if(tokens.length>=2){
-                    int ID=Integer.valueOf(str.substring(0, 1) );
+                if(tokens.length>=2 && Integer.valueOf(tokens[0])<Connect.output.size()){
+                    int ID=Integer.valueOf(tokens[0]);
                      
                     OutputStream writer = (OutputStream)Connect.output.elementAt(ID);
                     writer.write(tokens[1].getBytes());
@@ -84,6 +90,7 @@ class CServer_send extends Thread{
       catch(Exception e)
       {
          System.out.println("Error:"+e);
+         this.interrupt();
       }
    }
    static class KeyLis extends KeyAdapter
@@ -115,7 +122,9 @@ class CServer_Recv extends Thread{
     String feedback="";
     CalcTest calc;
     static int flag_send=0;
-    
+    String[] tokens;
+     OutputStream writer;
+     
     public CServer_Recv(Socket s,int onlineCount){
         this.s = s;
         this.onlineCount=onlineCount;
@@ -127,8 +136,8 @@ class CServer_Recv extends Thread{
       byte buff[] = new byte[1024];
       try
       {
-         test_server.txa1.append("Clinet connecting for receiving successfully!!\n");
-         System.out.println("Clinet connecting for receiving successfully!!");
+//         test_server.txa1.append("Clinet connecting for receiving successfully!!\n");
+//         System.out.println("Clinet connecting for receiving successfully!!");
         
          InputStream in=s.getInputStream();
          int n;
@@ -142,11 +151,25 @@ class CServer_Recv extends Thread{
             
             if(RecvString!=""){
                 
-                calc.setRec(RecvString);
-                feedback=calc.getRec();
-                OutputStream writer = (OutputStream)Connect.output.elementAt(onlineCount);
-                writer.write(feedback.getBytes());
+                tokens = RecvString.split(",");
+                switch(tokens[0]){
+                    case "TIME":
+                        writer = (OutputStream)Connect.output.elementAt(0);
+                        calc.setRec(RecvString);
+                        feedback="ORDER,"+calc.getRec();
+                        break;
+                    case "CARSPACE":
+                        writer = (OutputStream)Connect.output.elementAt(0);
+                        break;
+                    default:
+                        writer = (OutputStream)Connect.output.elementAt(onlineCount);
+                        break;
+                }
+                
+                
+                writer.write(RecvString.getBytes());
                 writer.flush();
+                System.out.println(RecvString);
 
                 feedback = "";
                 RecvString = ""; 
@@ -162,7 +185,10 @@ class CServer_Recv extends Thread{
       }
       catch(Exception e)
       {
-        System.out.println("RecvErr:"+e);
+          
+        System.out.println("Client"+onlineCount+"號已斷線");
+        this.interrupt();
+        
       }
    }
 }
