@@ -6,12 +6,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 class Connect extends Thread{
-    static AtomicInteger onlineCount = new AtomicInteger(0);
+    static int onlineCount;
     static Vector output;
     public Connect(){
-        output = new Vector();
+        output = new Vector(50);
     }
         public void run()
         {
@@ -21,22 +23,28 @@ class Connect extends Thread{
                 for (;;) {  
                     Socket incomingSend = svsSend.accept( );
                     Socket incomingRecv = svsRecv.accept( );
-                    
                     OutputStream out=incomingSend.getOutputStream();
-                    output.add(out);
+//                    if(output.isEmpty()){
+//                        output.add(0,"");
+//                    }else if(incomingSend.getInetAddress().equals("/120.107.144.232")){
+//                        output.set(0,out);
+//                    }
+                    onlineCount=output.size();
+                    output.add(onlineCount,out);
                     
                     System.out.println("連線的IP:"+incomingSend.getInetAddress());
-                    System.out.println("ID : " + onlineCount+ ", Connection Started");
+                    System.out.println("ID : " + onlineCount+"時間:"+getDateTime());
                     test_server.txa1.append(onlineCount+"號連線成功\n");
                     
                     new CServer_send().start();
                     
-                    Thread t = new Thread(new CServer_Recv(incomingRecv,onlineCount.intValue()));
+                    Thread t = new Thread(new CServer_Recv(incomingRecv,
+                            onlineCount,out));
                     t.start();
                     
-                    System.out.println("目前線上人數：" + (t.activeCount()/2-1));
+                    System.out.println("目前線上人數：" + output.size());
                     
-                    onlineCount.getAndIncrement();
+//                    onlineCount.getAndIncrement();
                     sleep((int)(100*Math.random()));
                 }
 
@@ -44,7 +52,14 @@ class Connect extends Thread{
             {
                System.out.println("Error IN Connect:"+e);
             }
-        }    
+        }
+        public String getDateTime(){
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
+        Date date = new Date();
+        String strDate = sdFormat.format(date);
+        //System.out.println(strDate);
+        return strDate;
+    }
 }
 
 class CServer_send extends Thread{
@@ -124,10 +139,12 @@ class CServer_Recv extends Thread{
     static int flag_send=0;
     String[] tokens;
      OutputStream writer;
+     OutputStream out;
      
-    public CServer_Recv(Socket s,int onlineCount){
+    public CServer_Recv(Socket s,int onlineCount,OutputStream out){
         this.s = s;
         this.onlineCount=onlineCount;
+        this.out=out;
         calc=new CalcTest();
     }
     
@@ -147,19 +164,20 @@ class CServer_Recv extends Thread{
             RecvString=new String(buff,0,n);
             RecvString = RecvString.replaceAll("\\s+", "");//!!!!!
             test_server.txa1.append("Client "+onlineCount+":"+RecvString+"\n");
-            System.out.print("Received from client "+onlineCount+":"+RecvString+"\n");
+            System.out.print("Received from client "+onlineCount+":"+RecvString+
+                    "時間:"+getDateTime()+"\n");
             
             if(RecvString!=""){
                 
                 tokens = RecvString.split(",");
                 switch(tokens[0]){
                     case "TIME":
-                        writer = (OutputStream)Connect.output.elementAt(0);
+                        writer = (OutputStream)Connect.output.get(0);
                         calc.setRec(RecvString);
                         feedback="ORDER,"+calc.getRec();
                         break;
                     case "CARSPACE":
-                        writer = (OutputStream)Connect.output.elementAt(0);
+                        writer = (OutputStream)Connect.output.get(0);
                         break;
                     default:
                         writer = (OutputStream)Connect.output.elementAt(onlineCount);
@@ -169,7 +187,7 @@ class CServer_Recv extends Thread{
                 
                 writer.write(RecvString.getBytes());
                 writer.flush();
-                System.out.println(RecvString);
+                System.out.println("送出"+RecvString+"時間:"+getDateTime()+"\n");
 
                 feedback = "";
                 RecvString = ""; 
@@ -185,12 +203,21 @@ class CServer_Recv extends Thread{
       }
       catch(Exception e)
       {
-          
+        System.out.println("LINE188"+e);  
         System.out.println("Client"+onlineCount+"號已斷線");
+        Connect.output.remove(out);
+        System.out.println("目前線上人數：" + Connect.output.size());
         this.interrupt();
         
       }
    }
+    public String getDateTime(){
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
+        Date date = new Date();
+        String strDate = sdFormat.format(date);
+        //System.out.println(strDate);
+        return strDate;
+    }
 }
 
 public class test_server
