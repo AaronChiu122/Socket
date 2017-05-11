@@ -1,11 +1,10 @@
 
-
+package aaronserver;
 import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Vector;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -31,10 +30,13 @@ class Connect extends Thread{
 //                    }
                     onlineCount=output.size();
                     output.add(onlineCount,out);
+                    String dt = getDateTime();
+                    System.out.println("é€£ç·šçš„IP:"+incomingSend.getInetAddress());
+                    System.out.println("ID : " + onlineCount+"æ™‚é–“:"+dt);
                     
-                    System.out.println("³s½uªºIP:"+incomingSend.getInetAddress());
-                    System.out.println("ID : " + onlineCount+"®É¶¡:"+getDateTime());
-                    test_server.txa1.append(onlineCount+"¸¹³s½u¦¨¥\\n");
+                    test_database.get_test_database().insertData("test", dt);//å­˜å…¥è³‡æ–™åº«
+                    
+                    test_server.txa1.append(onlineCount+"è™Ÿé€£ç·šæˆåŠŸ\n");
                     
                     new CServer_send().start();
                     
@@ -42,7 +44,7 @@ class Connect extends Thread{
                             onlineCount,out));
                     t.start();
                     
-                    System.out.println("¥Ø«e½u¤W¤H¼Æ¡G" + output.size());
+                    System.out.println("ç›®å‰ç·šä¸Šäººæ•¸ï¼š" + output.size());
                     
 //                    onlineCount.getAndIncrement();
                     sleep((int)(100*Math.random()));
@@ -59,13 +61,13 @@ class Connect extends Thread{
         String strDate = sdFormat.format(date);
         //System.out.println(strDate);
         return strDate;
-    }
+        }
 }
 
 class CServer_send extends Thread{
     public static String str="";
-   static int flag_send=0;
-   public void run(){
+    static int flag_send=0;
+    public void run(){
       try{
          test_server.txa2.addKeyListener(new KeyLis());
         
@@ -165,7 +167,7 @@ class CServer_Recv extends Thread{
             RecvString = RecvString.replaceAll("\\s+", "");//!!!!!
             test_server.txa1.append("Client "+onlineCount+":"+RecvString+"\n");
             System.out.print("Received from client "+onlineCount+":"+RecvString+
-                    "®É¶¡:"+getDateTime()+"\n");
+                    "æ™‚é–“:"+getDateTime()+"\n");
             
             if(RecvString!=""){
                 
@@ -187,7 +189,7 @@ class CServer_Recv extends Thread{
                 
                 writer.write(RecvString.getBytes());
                 writer.flush();
-                System.out.println("°e¥X"+RecvString+"®É¶¡:"+getDateTime()+"\n");
+                System.out.println("é€å‡º"+RecvString+"æ™‚é–“:"+getDateTime()+"\n");
 
                 feedback = "";
                 RecvString = ""; 
@@ -204,9 +206,10 @@ class CServer_Recv extends Thread{
       catch(Exception e)
       {
         System.out.println("LINE188"+e);  
-        System.out.println("Client"+onlineCount+"¸¹¤wÂ_½u");
+        System.out.println("Client"+onlineCount+"è™Ÿå·²æ–·ç·š"
+                                    +"æ™‚é–“:"+getDateTime());
         Connect.output.remove(out);
-        System.out.println("¥Ø«e½u¤W¤H¼Æ¡G" + Connect.output.size());
+        System.out.println("ç›®å‰ç·šä¸Šäººæ•¸ï¼š" + Connect.output.size());
         this.interrupt();
         
       }

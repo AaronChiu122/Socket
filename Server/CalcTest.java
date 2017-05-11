@@ -1,5 +1,5 @@
 
-
+package aaronserver;
 public class CalcTest {
     private String rec="";
     private String Total="";
@@ -32,16 +32,24 @@ public class CalcTest {
 //        for (String token:tokens) {
 //            System.out.println(token);
 //        }
-            Total=String.valueOf(Integer.valueOf(tokens[1])*10+ //water
-                Integer.valueOf(tokens[2])*15+  				//foam
-                Integer.valueOf(tokens[3])*20); 				//drying
+            String water=tokens[1],
+                    foam=tokens[2],
+                    dry=tokens[3];
+            test_database.get_test_database().insertData2("testTime",Integer.parseInt(water),
+                    Integer.parseInt(foam),Integer.parseInt(dry));
+            
+            Total=String.valueOf(Integer.valueOf(water)*10+ //water
+                Integer.valueOf(foam)*15+  		//foam
+                Integer.valueOf(dry)*20); 		//drying
+            
+            
             System.out.println("Total:"+Total);
             Total=null;
             rec=null;
             feedback="111142525836965555";
         }catch(Exception e){
             feedback="CAL";
-            System.out.println("clientºİ¿é¤Jªº¼Æ¾Ú¤£¹ï");   
+            System.out.println("clientç«¯è¼¸å…¥çš„æ•¸æ“šä¸å°");   
             System.out.println("CalErr"+e);
         }
         
